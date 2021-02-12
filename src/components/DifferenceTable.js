@@ -16,8 +16,6 @@ import Typography from '@material-ui/core/Typography';
 
 import api from '../lib/api';
 import './DifferenceTable.css'
-import usePersistedState from './usePersistedState';
-
 const parseData = (data) => {
   const parsedData = data.map(item => ({
     id: item.id,
@@ -62,8 +60,7 @@ const Row = ({user}) => {
   )
 }
 
-const DifferenceTable = ({ tableType }) => {
-  const [ rows, setRows ] = usePersistedState(tableType, [])
+const DifferenceTable = ({ rows, setRows, tableType }) => {
   const [ loading, setLoading ] = useState(false)
   const [ error, setError ] = useState(null)
   const [ order, setOrder] = useState('asc')
@@ -105,7 +102,7 @@ const DifferenceTable = ({ tableType }) => {
       <TableContainer component={Paper}>
         <Table className="user-table" aria-label="simple table">
           <TableHead>
-            <TableRow>
+            <TableRow data-testid="top-row">
               <TableCell>
                 Date
                 <TableSortLabel direction={order} onClick={handleRequestSort}></TableSortLabel>
@@ -118,7 +115,7 @@ const DifferenceTable = ({ tableType }) => {
           <TableBody>
             {rows.length > 0 &&
              stableSort(rows, getComparator(order)).map((user) => (
-              <Row key={user.id} user={user}/>
+              <Row data-testid="row" key={user.id} user={user}/>
             ))}
           </TableBody>
         </Table>
@@ -130,7 +127,7 @@ const DifferenceTable = ({ tableType }) => {
         {loading ?
         <CircularProgress />
         :
-        <Button variant="contained" color="primary" onClick={fetchData}>
+        <Button data-testid="fetch-button" variant="contained" color="primary" onClick={fetchData}>
           {buttonName()}
         </Button> 
         }

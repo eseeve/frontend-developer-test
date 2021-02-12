@@ -18,7 +18,7 @@ describe('<App />', () => {
       expect(wrapper.find({ 'data-testid': 'app-header' })).toHaveLength(1);
     });
 
-    it('renders the one table', () => {
+    it('renders one of the tables', () => {
       expect(wrapper.find({ 'data-testid': 'app-table' })).toHaveLength(1);
     });
   });
