@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import api from '../lib/api';
+import moment from 'moment';
+
 import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -11,9 +12,11 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Container from '@material-ui/core/Container';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import moment from 'moment';
-import './UserTable.css'
 import Typography from '@material-ui/core/Typography';
+
+import api from '../lib/api';
+import './DifferenceTable.css'
+import usePersistedState from './usePersistedState';
 
 const parseData = (data) => {
   const parsedData = data.map(item => ({
@@ -59,8 +62,8 @@ const Row = ({user}) => {
   )
 }
 
-const UserTable = () => {
-  const [ usersDiff, setUsersDiff ] = useState([])
+const DifferenceTable = ({ tableType }) => {
+  const [ rows, setRows ] = usePersistedState(tableType, [])
   const [ loading, setLoading ] = useState(false)
   const [ error, setError ] = useState(null)
   const [ order, setOrder] = useState('asc')
@@ -72,10 +75,15 @@ const UserTable = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const result = await api.getUsersDiff();
+      let result
+      if (tableType === 'User') {
+        result = await api.getUsersDiff();
+      } else if (tableType === 'Project') {
+        result = await api.getProjectsDiff();
+      }
       setError(null)
-      const newUsersDiff = [ ...usersDiff, ...parseData(result.data)]
-      setUsersDiff(newUsersDiff.sort(getComparator(order)))
+      const newRows = [ ...rows, ...parseData(result.data)]
+      setRows(newRows.sort(getComparator(order)))
     } catch (error) {
       setError('We had problems fetching your data. Please try again.')
     }
@@ -83,7 +91,7 @@ const UserTable = () => {
   };
 
   const buttonName = () => {
-    if (usersDiff.length === 0) {
+    if (rows.length === 0) {
       return 'Fetch data'
     } else if (error) {
       return 'Retry'
@@ -102,14 +110,14 @@ const UserTable = () => {
                 Date
                 <TableSortLabel direction={order} onClick={handleRequestSort}></TableSortLabel>
               </TableCell>
-              <TableCell>User ID</TableCell>
+              <TableCell>{tableType} ID</TableCell>
               <TableCell>Old value</TableCell>
               <TableCell>New value</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {usersDiff.length > 0 &&
-             stableSort(usersDiff, getComparator(order)).map((user) => (
+            {rows.length > 0 &&
+             stableSort(rows, getComparator(order)).map((user) => (
               <Row key={user.id} user={user}/>
             ))}
           </TableBody>
@@ -131,4 +139,4 @@ const UserTable = () => {
   )
 }
 
-export default UserTable
+export default DifferenceTable
