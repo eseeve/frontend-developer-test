@@ -33,9 +33,20 @@ const descendingComparator = (a, b) => {
 
 const getComparator = (order) => {
   return order === 'desc'
-    ? (a, b) => -descendingComparator(a, b)
-    : (a, b) => descendingComparator(a, b)
+    ? (a, b) => descendingComparator(a, b)
+    : (a, b) => -descendingComparator(a, b)
 }
+
+const stableSort = (array, comparator) => {
+  const stabilizedThis = array.map((el, index) => [el, index]);
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order !== 0) return order;
+    return a[1] - b[1];
+  });
+  return stabilizedThis.map((el) => el[0]);
+}
+
 
 const Row = ({user}) => {
   return (
@@ -52,7 +63,11 @@ const UserTable = () => {
   const [ usersDiff, setUsersDiff ] = useState([])
   const [ loading, setLoading ] = useState(false)
   const [ error, setError ] = useState(null)
-  const [ order, setOrder] = useState('desc')
+  const [ order, setOrder] = useState('asc')
+
+  const handleRequestSort = (event) => {
+    setOrder(order === 'asc' ? 'desc' : 'asc');
+  };
 
   const fetchData = async () => {
     setLoading(true)
@@ -77,26 +92,15 @@ const UserTable = () => {
     }
   }
 
-  const sortTable = (event) => {
-    event.preventDefault()
-    if (order === 'desc') {
-      setOrder('asc')
-    } else {
-      setOrder('desc')
-    }
-    console.log(order)
-    setUsersDiff(usersDiff.sort(getComparator(order)))
-  }
-
   return (
-    <Container>
+    <Container mt={2}>
       <TableContainer component={Paper}>
         <Table className="user-table" aria-label="simple table">
           <TableHead>
             <TableRow>
               <TableCell>
                 Date
-                <TableSortLabel direction={order} onClick={sortTable}></TableSortLabel>
+                <TableSortLabel direction={order} onClick={handleRequestSort}></TableSortLabel>
               </TableCell>
               <TableCell>User ID</TableCell>
               <TableCell>Old value</TableCell>
@@ -105,7 +109,7 @@ const UserTable = () => {
           </TableHead>
           <TableBody>
             {usersDiff.length > 0 &&
-             usersDiff.map((user) => (
+             stableSort(usersDiff, getComparator(order)).map((user) => (
               <Row key={user.id} user={user}/>
             ))}
           </TableBody>
